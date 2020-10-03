@@ -78,12 +78,21 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
       return loadTrackFormatsFromAdaptive(adaptiveFormats);
     }
 
-    String playerResponse = args.get("player_response").text();
+    JsonBrowser playerResponseData;
 
-    if (playerResponse != null) {
-      JsonBrowser playerData = JsonBrowser.parse(playerResponse);
-      JsonBrowser streamingData = playerData.get("streamingData");
-      boolean isLive = playerData.get("videoDetails").get("isLive").asBoolean(false);
+    if (args.isNull()) {
+      // New format, player response data is merged with player data
+      playerResponseData = info;
+    } else {
+      // Old format
+      String playerResponse = args.get("player_response").text();
+      playerResponseData = JsonBrowser.parse(playerResponse);
+    }
+
+
+    if (!playerResponseData.isNull()) {
+      JsonBrowser streamingData = playerResponseData.get("streamingData");
+      boolean isLive = playerResponseData.get("videoDetails").get("isLive").asBoolean(false);
 
       if (!streamingData.isNull()) {
         List<YoutubeTrackFormat> formats = loadTrackFormatsFromStreamingData(streamingData.get("formats"), isLive);
